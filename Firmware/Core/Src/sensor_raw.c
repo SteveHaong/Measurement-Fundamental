@@ -17,7 +17,7 @@ void MQ7_Cycle_Manager(void) {
 
     if (timer_mq7_A < 60) {
         // [Giai đoạn sấy 5V]: 60 giây đầu
-        // Chỗ này sau này ông Nam cấu hình chân GPIO điều khiển sấy thì nhét vào đây
+        // Chỗ này sau này cấu hình chân GPIO điều khiển sấy thì nhét vào đây
     } else {
         // [Giai đoạn đo 1.4V]: 90 giây sau
         if (timer_mq7_A == 148) { // Lấy mẫu ở giây thứ 148 (cuối chu kỳ đo) để dữ liệu ổn định nhất
