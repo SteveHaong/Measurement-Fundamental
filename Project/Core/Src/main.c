@@ -18,6 +18,10 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+/* USER CODE BEGIN Includes */
+#include "periph_led_buzzer.h"
+#include "fan_pwm.h"
+/* USER CODE END Includes */
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -105,7 +109,9 @@ int main(void)
   MX_I2C1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
-
+  LedBuzzer_Init();
+  FanPWM_Init(&htim2);
+  FanPWM_SetDuty(30); /* start with low speed */
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -115,6 +121,30 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    {
+      const uint32_t threshold = 3000;
+      uint32_t adc_val = 0;
+      HAL_ADC_Start(&hadc1);
+      if (HAL_ADC_PollForConversion(&hadc1, 10) == HAL_OK)
+      {
+        adc_val = HAL_ADC_GetValue(&hadc1);
+      }
+      HAL_ADC_Stop(&hadc1);
+
+      if (adc_val > threshold)
+      {
+        Led_On();
+        Buzzer_Beep(100);
+        FanPWM_SetDuty(80);
+      }
+      else
+      {
+        Led_Off();
+        FanPWM_SetDuty(30);
+      }
+
+      HAL_Delay(200);
+    }
   }
   /* USER CODE END 3 */
 }
