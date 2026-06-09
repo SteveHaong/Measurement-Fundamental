@@ -143,12 +143,11 @@ int main(void)
       }
 
       // ---------------------------------------------------------
-      // [LUỒNG 2] - ĐỌC NHIỆT ĐỘ & XỬ LÝ CẢNH BÁO (Mỗi 200ms)
+      // [LUỒNG 2]  XỬ LÝ CẢNH BÁO (Mỗi 200ms)
       // ---------------------------------------------------------
       if (current_time - last_sensor_read >= 200) {
 
           // Tạm khóa
-          // current_temp = SHT30_Get_Temp();
           // System_Warning_Logic(current_temp, mq135_raw, mq7_raw);
 
           last_sensor_read = current_time;
