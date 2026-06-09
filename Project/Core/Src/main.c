@@ -16,6 +16,7 @@
 #include "fan_pwm.h"
 #include "sensor_raw.h"
 #include "adc_dma.h"
+#include "temp_sensor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -49,6 +50,7 @@ uint32_t last_sensor_read = 0;
 float current_temp = 0.0;
 uint16_t mq135_raw = 0;
 uint16_t mq7_raw = 0;
+SHT30_Data_t sht30_data;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -109,6 +111,7 @@ int main(void)
   FanPWM_SetDuty(30); /* start with low speed */
 
   ADC_DMA_Init();
+  SHT30_Init(&hi2c1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -116,7 +119,13 @@ int main(void)
   while (1)
   {
       uint32_t current_time = HAL_GetTick();
-
+      // ---------------------------------------------------------
+      // [LUỒNG BACKGROUND] - CẢM BIẾN SHT30 (Chạy tự do)
+      // ---------------------------------------------------------
+      // Hàm này chạy liên tục, tự đợi 20ms. Khi nào xong nó trả về HAL_OK
+      if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
+             current_temp = sht30_data.temperature; // Lấy nhiệt độ từ rổ bỏ vào biến
+       }
       // ---------------------------------------------------------
       // [LUỒNG 1] - ĐỌC KHÍ VÀ IN LOG LÊN MÁY TÍNH (Mỗi 1 giây)
       // ---------------------------------------------------------
