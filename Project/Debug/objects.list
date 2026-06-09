@@ -1,5 +1,7 @@
 "./Core/Src/adc_dma.o"
+"./Core/Src/fan_pwm.o"
 "./Core/Src/main.o"
+"./Core/Src/periph_led_buzzer.o"
 "./Core/Src/sensor_raw.o"
 "./Core/Src/stm32f4xx_hal_msp.o"
 "./Core/Src/stm32f4xx_it.o"
