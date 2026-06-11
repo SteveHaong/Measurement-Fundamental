@@ -45,7 +45,7 @@ UART_HandleTypeDef huart2;
 /* --- BIẾN ĐỊNH THỜI ĐA NHIỆM --- */
 uint32_t last_mq7_cycle = 0;
 uint32_t last_sensor_read = 0;
-
+uint8_t current_pwm = 0;
 /* --- BIẾN LƯU TRỮ DỮ LIỆU --- */
 float current_temp = 0.0;
 uint16_t mq135_raw = 0;
@@ -137,8 +137,9 @@ int main(void)
           mq7_raw = Get_MQ7_Current_Raw();
 
           // In toàn bộ thông số lên Terminal PC
-          printf("[DATA] Temp: %.1fC | MQ135: %d | MQ7: %d\r\n", current_temp, mq135_raw, mq7_raw);
 
+          printf("{\"T\": %5.1f, \"M135\": %4d, \"M7\": %4d, \"PWM\": %3d}\r\n",
+                 current_temp, mq135_raw, mq7_raw, current_pwm);
           last_mq7_cycle = current_time;
       }
 
