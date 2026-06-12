@@ -7,7 +7,7 @@
 
 #include "main.h"
 
-void FanPWM_Init(TIM_HandleTypeDef *htim);
+void FanPWM_Init(void);
 void FanPWM_SetDuty(uint8_t percent);
 
 #endif // FAN_PWM_H

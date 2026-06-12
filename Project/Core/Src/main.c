@@ -110,7 +110,7 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   LedBuzzer_Init();
-  FanPWM_Init(&htim2);
+  FanPWM_Init();
   FanPWM_SetDuty(30); /* start with low speed */
   /* USER CODE END 2 */
 
