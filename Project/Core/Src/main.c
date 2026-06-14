@@ -21,6 +21,7 @@
 /* USER CODE BEGIN Includes */
 #include "periph_led_buzzer.h"
 #include "fan_pwm.h"
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private includes ----------------------------------------------------------*/
@@ -131,17 +132,26 @@ int main(void)
       }
       HAL_ADC_Stop(&hadc1);
 
+      uint8_t pwm_duty;
       if (adc_val > threshold)
       {
         Led_On();
         Buzzer_Beep(100);
-        FanPWM_SetDuty(80);
+        pwm_duty = 80;
       }
       else
       {
         Led_Off();
-        FanPWM_SetDuty(30);
+        pwm_duty = 30;
       }
+      FanPWM_SetDuty(pwm_duty);
+
+      /* Build output string and send over UART */
+      char tx_buffer[64];
+      float temp = adc_val * (3.3f / 4095.0f) * 100.0f; // Scale raw ADC to mocked Temperature
+      int mock_rpm = pwm_duty * 30; 
+      int len = snprintf(tx_buffer, sizeof(tx_buffer), "%.2f,%d,%d\n", temp, pwm_duty, mock_rpm);
+      HAL_UART_Transmit(&huart2, (uint8_t*)tx_buffer, len, HAL_MAX_DELAY);
 
       HAL_Delay(200);
     }
