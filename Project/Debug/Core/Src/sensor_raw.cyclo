@@ -1,4 +1,4 @@
 ../Core/Src/sensor_raw.c:15:10:Filter_EMA	2
 ../Core/Src/sensor_raw.c:24:10:Get_MQ135_Raw	1
 ../Core/Src/sensor_raw.c:29:6:MQ7_Cycle_Manager	7
-../Core/Src/sensor_raw.c:59:10:Get_MQ7_Current_Raw	1
+../Core/Src/sensor_raw.c:63:10:Get_MQ7_Current_Raw	1

@@ -1,6 +1,6 @@
 #include "sensor_raw.h"
 #include "adc_dma.h"
-
+#include "stm32f4xx.h"
 // Thời gian chu kỳ tổng là 150 giây. Con B chạy lệch pha sau con A 75 giây.
 static uint16_t timer_mq7_A = 0;
 static uint16_t timer_mq7_B = 75;
@@ -33,8 +33,10 @@ void MQ7_Cycle_Manager(void) {
 
     if (timer_mq7_A < 60) {
         // [Giai đoạn sấy 5V]: 60 giây đầu
+
     } else {
         // [Giai đoạn đo 1.4V]: 90 giây sau
+
         if (timer_mq7_A == 148) {
             // Ép qua màng lọc ngay tại thời điểm chốt số liệu (độ mượt 0.3 vì lấy mẫu thưa)
             final_mq7_value = Filter_EMA(adc_buffer[1], &mq7_A_ema, 0.3);
@@ -47,8 +49,10 @@ void MQ7_Cycle_Manager(void) {
 
     if (timer_mq7_B < 60) {
         // [Giai đoạn sấy 5V] của con B
+
     } else {
         // [Giai đoạn đo 1.4V] của con B
+
         if (timer_mq7_B == 148) {
             // Ép qua màng lọc ngay tại thời điểm chốt số liệu
             final_mq7_value = Filter_EMA(adc_buffer[2], &mq7_B_ema, 0.3);

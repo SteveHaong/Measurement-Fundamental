@@ -51,6 +51,16 @@ float current_temp = 0.0;
 uint16_t mq135_raw = 0;
 uint16_t mq7_raw = 0;
 SHT30_Data_t sht30_data;
+
+/* --- BIẾN PID ĐIỀU KHIỂN QUẠT --- */
+float Kp = 10.0;  // Tăng tốc độ phản ứng (Nóng cái quạt quay tít ngay)
+float Ki = 0.5;   // Khử sai số tĩnh (Chống quạt quay lờ đờ)
+float Kd = 1.0;   // Chống vọt lố (Giảm tốc quạt khi nhiệt độ bắt đầu hạ)
+float setpoint_temp = 31.0; // Nhiệt độ kích hoạt (Vd: Quá 31 độ là quạt bắt đầu chạy)
+
+float pid_error = 0, previous_error = 0;
+float integral = 0, derivative = 0;
+float pid_output = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -123,9 +133,10 @@ int main(void)
       // [LUỒNG BACKGROUND] - CẢM BIẾN SHT30 (Chạy tự do)
       // ---------------------------------------------------------
       // Hàm này chạy liên tục, tự đợi 20ms. Khi nào xong nó trả về HAL_OK
-      if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
+     if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
              current_temp = sht30_data.temperature; // Lấy nhiệt độ từ rổ bỏ vào biến
        }
+
       // ---------------------------------------------------------
       // [LUỒNG 1] - ĐỌC KHÍ VÀ IN LOG LÊN MÁY TÍNH (Mỗi 1 giây)
       // ---------------------------------------------------------
@@ -147,11 +158,43 @@ int main(void)
       // [LUỒNG 2]  XỬ LÝ CẢNH BÁO (Mỗi 200ms)
       // ---------------------------------------------------------
       if (current_time - last_sensor_read >= 200) {
+    	            // --- 1. THUẬT TOÁN PID CHO QUẠT TẢN NHIỆT ---
+    	            pid_error = current_temp - setpoint_temp;
 
-          // Tạm khóa
-          // System_Warning_Logic(current_temp, mq135_raw, mq7_raw);
+    	            if (pid_error > 0) {
+    	                // Nếu nhiệt độ thực tế CAO HƠN ngưỡng 31 độ
+    	                // Thời gian lấy mẫu dt = 0.2 giây (200ms)
+    	                integral = integral + (pid_error * 0.2);
+    	                derivative = (pid_error - previous_error) / 0.2;
 
-          last_sensor_read = current_time;
+    	                pid_output = (Kp * pid_error) + (Ki * integral) + (Kd * derivative);
+
+    	                // Khóa giới hạn băm xung PWM từ 0% đến 100%
+    	                if (pid_output > 100.0) pid_output = 100.0;
+    	                if (pid_output < 0.0)   pid_output = 0.0;
+
+    	                current_pwm = (uint8_t)pid_output;
+    	            } else {
+    	                // Nếu nhiệt độ MÁT HƠN 31 độ -> Tắt quạt
+    	                current_pwm = 0;
+    	                integral = 0; // Reset khâu I để chống kẹt số (Wind-up)
+    	            }
+
+    	            previous_error = pid_error;
+
+    	            // Xuất xung thực tế ra chân PA15 của quạt
+    	            FanPWM_SetDuty(current_pwm);
+
+    	            // --- 2. LOGIC CẢNH BÁO KHÍ GA ---
+    	            if (mq7_raw > 2000 || mq135_raw > 1500) {
+    	                Led_On();
+    	                 Buzzer_Beep(100); // Thích kêu thì mở comment
+    	            } else {
+    	                Led_Off();
+    	            }
+
+    	            last_sensor_read = current_time;
+    	        }
       }
 
     /* USER CODE END WHILE */
@@ -159,7 +202,6 @@ int main(void)
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
-}
 
 /**
   * @brief System Clock Configuration
