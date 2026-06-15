@@ -1,5 +1,5 @@
 ../Core/Src/main.c:81:5:_write	1
-../Core/Src/main.c:91:5:main	10
+../Core/Src/main.c:91:5:main	9
 ../Core/Src/main.c:214:6:SystemClock_Config	3
 ../Core/Src/main.c:252:13:MX_ADC1_Init	5
 ../Core/Src/main.c:299:13:MX_I2C1_Init	2

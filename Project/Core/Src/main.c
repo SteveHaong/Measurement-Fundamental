@@ -137,8 +137,8 @@ int main(void)
       if (current_time - last_mq7_cycle >= 1000) {
 
                 // 1. Đọc SHT30
-                if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
-                    current_temp = sht30_data.temperature;
+               if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
+                   current_temp = sht30_data.temperature;
                     // (Thực ra trong sht30_data đã có sẵn độ ẩm: sht30_data.humidity)
                 }
 
@@ -190,7 +190,7 @@ int main(void)
     	            FanPWM_SetDuty(current_pwm);
 
     	            // --- 2. LOGIC CẢNH BÁO KHÍ GA ---
-    	            if (mq7_raw > 2000 || mq135_raw > 1500) {
+    	            if (mq7_raw > 1000 || mq135_raw > 500) {
     	                Led_On();
     	                 Buzzer_Beep(100);
     	            } else {
