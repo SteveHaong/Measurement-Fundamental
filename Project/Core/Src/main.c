@@ -122,6 +122,11 @@ int main(void)
 
   ADC_DMA_Init();
   SHT30_Init(&hi2c1);
+  if (SHT30_Init(&hi2c1) == HAL_OK) {
+        printf(">>> SHT30 CONNECTED OK! <<<\r\n");
+    } else {
+        printf(">>> ERROR: SHT30 NOT FOUND! CHECK WIRING OR ADDRESS! <<<\r\n");
+    }
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -129,30 +134,29 @@ int main(void)
   while (1)
   {
       uint32_t current_time = HAL_GetTick();
-      // ---------------------------------------------------------
-      // [LUỒNG BACKGROUND] - CẢM BIẾN SHT30 (Chạy tự do)
-      // ---------------------------------------------------------
-      // Hàm này chạy liên tục, tự đợi 20ms. Khi nào xong nó trả về HAL_OK
-     if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
-             current_temp = sht30_data.temperature; // Lấy nhiệt độ từ rổ bỏ vào biến
-       }
-
-      // ---------------------------------------------------------
-      // [LUỒNG 1] - ĐỌC KHÍ VÀ IN LOG LÊN MÁY TÍNH (Mỗi 1 giây)
-      // ---------------------------------------------------------
       if (current_time - last_mq7_cycle >= 1000) {
 
+                // 1. Đọc SHT30
+                if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
+                    current_temp = sht30_data.temperature;
+                    // (Thực ra trong sht30_data đã có sẵn độ ẩm: sht30_data.humidity)
+                }
 
-           MQ7_Cycle_Manager();
-          mq135_raw = Get_MQ135_Raw();
-          mq7_raw = Get_MQ7_Current_Raw();
+                // 2. Đọc Cảm biến Khí
+                MQ7_Cycle_Manager();
+                mq135_raw = Get_MQ135_Raw();
+                mq7_raw = Get_MQ7_Current_Raw();
 
-          // In toàn bộ thông số lên Terminal PC
+                // 3. In toàn bộ thông số lên Terminal PC (ĐÃ BỔ SUNG ĐỘ ẨM)
+                printf("{\"T\": %5.1f, \"H\": %5.1f, \"M135\": %4d, \"M7\": %4d, \"PWM\": %3d}\r\n",
+                       current_temp,
+                       sht30_data.humidity,  // <-- Ép nó in độ ẩm ra đây
+                       mq135_raw,
+                       mq7_raw,
+                       current_pwm);
 
-          printf("{\"T\": %5.1f, \"M135\": %4d, \"M7\": %4d, \"PWM\": %3d}\r\n",
-                 current_temp, mq135_raw, mq7_raw, current_pwm);
-          last_mq7_cycle = current_time;
-      }
+                last_mq7_cycle = current_time;
+            }
 
       // ---------------------------------------------------------
       // [LUỒNG 2]  XỬ LÝ CẢNH BÁO (Mỗi 200ms)
@@ -188,7 +192,7 @@ int main(void)
     	            // --- 2. LOGIC CẢNH BÁO KHÍ GA ---
     	            if (mq7_raw > 2000 || mq135_raw > 1500) {
     	                Led_On();
-    	                 Buzzer_Beep(100); // Thích kêu thì mở comment
+    	                 Buzzer_Beep(100);
     	            } else {
     	                Led_Off();
     	            }

@@ -3,7 +3,7 @@
 
 void LedBuzzer_Init(void)
 {
-  /* GPIOs already configured in MX_GPIO_Init(); nothing additional required */
+	HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_SET);
 }
 
 void Led_On(void)
@@ -18,7 +18,7 @@ void Led_Off(void)
 
 void Buzzer_Beep(uint32_t ms)
 {
-  HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_SET);
-  HAL_Delay(ms);
   HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_RESET);
+  HAL_Delay(ms);
+  HAL_GPIO_WritePin(GPIOC, Buzzer_Pin, GPIO_PIN_SET);
 }
