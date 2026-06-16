@@ -137,9 +137,9 @@ int main(void)
       if (current_time - last_mq7_cycle >= 1000) {
 
                 // 1. Đọc SHT30
-               if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
-                   current_temp = sht30_data.temperature;
-                    // (Thực ra trong sht30_data đã có sẵn độ ẩm: sht30_data.humidity)
+              if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
+                  current_temp = sht30_data.temperature;
+                   // (Thực ra trong sht30_data đã có sẵn độ ẩm: sht30_data.humidity)
                 }
 
                 // 2. Đọc Cảm biến Khí
