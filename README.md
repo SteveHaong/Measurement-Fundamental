@@ -4,7 +4,9 @@ Dự án thiết kế hệ thống đo lường, đọc dữ liệu các cảm b
 
 ## Sơ đồ khối của hệ thống
 <img width="887" height="375" alt="sodoikhoi" src="https://github.com/user-attachments/assets/c907853a-5262-4893-aac6-e585984b47e7" />
-
+## Video demo
+## Video demo
+[![Xem Video Demo Hệ Thống](https://img.shields.io/badge/Google_Drive-Xem_Video_Demo-blue?logo=google-drive&style=for-the-badge)](https://drive.google.com/file/d/1fWMwy-D5oSYDZFlj3-bbJhGY5o71RAaZ/view?usp=sharing)
 ---
 
 
