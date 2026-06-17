@@ -8,9 +8,11 @@ import json
 
 # Khởi tạo tham số toàn cục để lưu dữ liệu
 data_length = 100
-sensor_data_y = [0.0] * data_length
-sensor_data_x = list(range(data_length))
+sensor_data_y = [0.0] * data_length  # Dữ liệu nhiệt độ
+pwm_data_y = [0.0] * data_length    # Dữ liệu PWM
+sensor_data_x = list(range(data_length))  # Trục X (thời gian)
 
+last_chart_update = 0.0
 current_temp = 0.0
 current_hum = 0.0
 current_mq135 = 0
@@ -130,12 +132,25 @@ def update_thermo_animation():
     dpg.draw_circle((55, 160), 20, color=fill_color, fill=fill_color, parent="thermo_drawlist")
 
 def update_data():
-    if is_connected:
-        sensor_data_y.pop(0)
-        sensor_data_y.append(current_temp)
-        dpg.set_value("sensor_series", [sensor_data_x, sensor_data_y])
+    global last_chart_update
     
-    # Cập nhật số liệu các Text Box
+    if is_connected:
+        current_time = time.time()
+        # "Van xả": Ép đồ thị chỉ cập nhật 1 giây 1 lần
+        if current_time - last_chart_update >= 1.0:
+            # 1. Cập nhật mảng nhiệt độ
+            sensor_data_y.pop(0)
+            sensor_data_y.append(current_temp)
+            dpg.set_value("sensor_series", [sensor_data_x, sensor_data_y])
+            
+            # 2. Cập nhật mảng PWM
+            pwm_data_y.pop(0)
+            pwm_data_y.append(current_pwm)
+            dpg.set_value("pwm_series", [sensor_data_x, pwm_data_y])
+            
+            last_chart_update = current_time
+
+    # Các UI khác (Text, Progress Bar, Animation) cho chạy tốc độ bàn thờ để mượt
     dpg.set_value("temp_val_txt", f"{current_temp:.2f} °C")
     dpg.set_value("rpm_val_txt", f"{current_rpm} RPM")
     dpg.set_value("pwm_val_txt", f"{current_pwm} %")
@@ -143,14 +158,12 @@ def update_data():
     dpg.set_value("mq7_val_txt", f"{current_mq7} / 4095")
     dpg.set_value("mq135_val_txt", f"{current_mq135} / 4095")
     
-    # Cập nhật các thanh Progress Bar (Ép về thang 0.0 - 1.0)
     dpg.set_value("pwm_bar", current_pwm / 100.0)
     dpg.set_value("mq7_bar", min(current_mq7 / 4095.0, 1.0))
     dpg.set_value("mq135_bar", min(current_mq135 / 4095.0, 1.0))
     
     update_fan_animation()
     update_thermo_animation()
-
 dpg.create_context()
 set_visual_theme()
 
@@ -203,12 +216,19 @@ with dpg.window(label="STM32 Dashboard - Interactive", tag="main_window"):
     dpg.add_spacer(height=10)
     
     # ---- KHU VỰC CHART ----
-    with dpg.plot(label="Real-time Temp Data", height=-1, width=-1):
+    with dpg.plot(label="PID Response: Temperature vs Fan PWM", height=-1, width=-1):
         dpg.add_plot_legend()
         dpg.add_plot_axis(dpg.mvXAxis, label="Time")
-        dpg.add_plot_axis(dpg.mvYAxis, label="Temperature (°C)", tag="y_axis")
-        dpg.set_axis_limits("y_axis", 0, 80) 
-        dpg.add_line_series(sensor_data_x, sensor_data_y, label="Temp (°C)", parent="y_axis", tag="sensor_series")
+        
+        # TRỤC Y SỐ 1 (Bên trái) - Nhiệt độ
+        dpg.add_plot_axis(dpg.mvYAxis, label="Temperature (°C)", tag="y_axis_temp")
+        dpg.set_axis_limits("y_axis_temp", 25, 45) 
+        dpg.add_line_series(sensor_data_x, sensor_data_y, label="Temp (°C)", parent="y_axis_temp", tag="sensor_series")
+
+        # TRỤC Y SỐ 2 (Bên phải) - Tốc độ quạt
+        dpg.add_plot_axis(dpg.mvYAxis, label="PWM (%)", tag="y_axis_pwm")
+        dpg.set_axis_limits("y_axis_pwm", -5, 105) # Lấy biên -5 đến 105 để đồ thị không cọ vào mép
+        dpg.add_line_series(sensor_data_x, pwm_data_y, label="PWM (%)", parent="y_axis_pwm", tag="pwm_series")
 
 scan_ports()
 

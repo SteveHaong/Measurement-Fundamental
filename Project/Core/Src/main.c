@@ -53,10 +53,10 @@ uint16_t mq7_raw = 0;
 SHT30_Data_t sht30_data;
 
 /* --- BIẾN PID ĐIỀU KHIỂN QUẠT --- */
-float Kp = 10.0;  // Tăng tốc độ phản ứng (Nóng cái quạt quay tít ngay)
-float Ki = 0.5;   // Khử sai số tĩnh (Chống quạt quay lờ đờ)
-float Kd = 1.0;   // Chống vọt lố (Giảm tốc quạt khi nhiệt độ bắt đầu hạ)
-float setpoint_temp = 31.0; // Nhiệt độ kích hoạt (Vd: Quá 31 độ là quạt bắt đầu chạy)
+float Kp = 30.0;  // Tăng tốc độ phản ứng
+float Ki = 0.2;   // Khử sai số tĩnh
+float Kd = 0;   // Phanh ( cảm biến nhiệt dễ nhiễu nên k cần )
+float setpoint_temp = 31.0; // Nhiệt độ kích hoạt
 
 float pid_error = 0, previous_error = 0;
 float integral = 0, derivative = 0;
@@ -139,7 +139,6 @@ int main(void)
                 // 1. Đọc SHT30
               if (SHT30_Read_Temp_Humidity_NonBlocking(&hi2c1, &sht30_data) == HAL_OK) {
                   current_temp = sht30_data.temperature;
-                   // (Thực ra trong sht30_data đã có sẵn độ ẩm: sht30_data.humidity)
                 }
 
                 // 2. Đọc Cảm biến Khí
@@ -147,10 +146,10 @@ int main(void)
                 mq135_raw = Get_MQ135_Raw();
                 mq7_raw = Get_MQ7_Current_Raw();
 
-                // 3. In toàn bộ thông số lên Terminal PC (ĐÃ BỔ SUNG ĐỘ ẨM)
+                // 3. In toàn bộ thông số lên Terminal PC
                 printf("{\"T\": %5.1f, \"H\": %5.1f, \"M135\": %4d, \"M7\": %4d, \"PWM\": %3d}\r\n",
                        current_temp,
-                       sht30_data.humidity,  // <-- Ép nó in độ ẩm ra đây
+                       sht30_data.humidity,
                        mq135_raw,
                        mq7_raw,
                        current_pwm);
@@ -170,14 +169,16 @@ int main(void)
     	                // Thời gian lấy mẫu dt = 0.2 giây (200ms)
     	                integral = integral + (pid_error * 0.2);
     	                derivative = (pid_error - previous_error) / 0.2;
-
+    	                if (integral > 100.0) integral = 100.0;
     	                pid_output = (Kp * pid_error) + (Ki * integral) + (Kd * derivative);
 
     	                // Khóa giới hạn băm xung PWM từ 0% đến 100%
     	                if (pid_output > 100.0) pid_output = 100.0;
     	                if (pid_output < 0.0)   pid_output = 0.0;
 
-    	                current_pwm = (uint8_t)pid_output;
+    	                if (pid_output >1) {   // tránh deadband
+    	                	current_pwm = 20 + (uint8_t)(pid_output * 0.8);
+    	                }
     	            } else {
     	                // Nếu nhiệt độ MÁT HƠN 31 độ -> Tắt quạt
     	                current_pwm = 0;
@@ -190,7 +191,7 @@ int main(void)
     	            FanPWM_SetDuty(current_pwm);
 
     	            // --- 2. LOGIC CẢNH BÁO KHÍ GA ---
-    	            if (mq7_raw > 1000 || mq135_raw > 500) {
+    	            if (mq7_raw > 1000 || mq135_raw > 400) {
     	                Led_On();
     	                 Buzzer_Beep(100);
     	            } else {
